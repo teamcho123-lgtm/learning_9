@@ -28,10 +28,18 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     handleRequest(err: any, user: any, info: any) {
+        if (info?.name === 'TokenExpiredError') {
+            throw new UnauthorizedException({
+                code: 'ACCESS_TOKEN_EXPIRED',
+                message: 'Access token đã hết hạn',
+            });
+        }
+
         if (err || !user) {
-            throw err || new UnauthorizedException(
-                'Token không hợp lệ hoặc đã hết hạn',
-            );
+            throw err || new UnauthorizedException({
+                code: 'ACCESS_TOKEN_INVALID',
+                message: 'Access token không hợp lệ',
+            });
         }
 
         return user;

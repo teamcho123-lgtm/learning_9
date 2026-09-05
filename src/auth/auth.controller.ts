@@ -36,4 +36,10 @@ export class AuthController {
   verify(@Body() body: { email: string; codeId: string }) {
     return this.authService.verifyCode(body.email, body.codeId);
   }
+
+  @Public()
+  @Post('refreshToken')
+  refreshToken(@Body() body: { refreshToken: string }) {
+    return this.authService.refreshToken(body.refreshToken);
+  }
 }
