@@ -5,6 +5,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from './entities/user.entity.js';
 import { isValidObjectId, Model } from 'mongoose';
 import { hashPasswordHelper } from '../../helper/util.js';
+import { CreateAuthDto } from '../../auth/dto/create-auth.dto.js';
+import dayjs from 'dayjs';
+import { randomInt } from 'node:crypto';
+import { v4 as uuidv4 } from 'uuid';
 
 
 @Injectable()
@@ -122,5 +126,61 @@ export class UsersService {
     }
 
     return `This action removes a #${id} user`;
+  }
+
+  async register(createAuthDto: CreateAuthDto) {
+    const { name, email, password } = createAuthDto
+
+    const isEmailExist = await this.isEmailExist(email)
+    if (isEmailExist) {
+      throw new Error('Email da ton tai')
+    }
+
+    const hashedPassword = await hashPasswordHelper(createAuthDto.password)
+
+    const codeExpired = dayjs()
+      .add(5, 'minute')
+      .toDate();
+
+    const newUser = await this.userModel.create({
+      name,
+      email,
+      password: hashedPassword,
+      isActive: false,
+      codeId: uuidv4(),
+      codeExpired,
+    })
+
+    return {
+      message: 'Đăng ký thành công, vui lòng xác thực tài khoản',
+      email: newUser.email,
+    };
+
+  }
+
+  async verifyCode(email: string, codeId: string) {
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      throw new BadRequestException('Không tìm thấy tài khoản');
+    }
+
+    if (user.codeId !== codeId) {
+      throw new BadRequestException('Mã xác thực không đúng');
+    }
+
+    if (!user.codeExpired || dayjs().isAfter(user.codeExpired)) {
+      throw new BadRequestException('Mã xác thực đã hết hạn');
+    }
+
+    user.isActive = true;
+    user.codeId = '';
+    user.codeExpired = null as any;
+
+    await user.save();
+
+    return {
+      message: 'Xác thực tài khoản thành công',
+    };
   }
 }
