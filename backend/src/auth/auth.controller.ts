@@ -1,8 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
-import { AuthGuard } from '@nestjs/passport';
 import { LocalAuthGuard } from './passport/local-auth.guard.js';
-import { JwtAuthGuard } from './passport/jwt-auth.guard.js';
 import { Public } from './decorators/public.decorator.js';
 import { CreateAuthDto } from './dto/create-auth.dto.js';
 
@@ -19,7 +17,6 @@ export class AuthController {
   }
 
   @Get('profile')
-  @UseGuards(JwtAuthGuard)
   getProfile(@Request() req: any) {
     return req.user;
   }

@@ -1,0 +1,9 @@
+export { auth as proxy } from "@/auth";
+
+export const config = {
+    matcher: [
+        "/users/:path*",
+        "/auth/signIn",
+        "/auth/signUp",
+    ],
+};

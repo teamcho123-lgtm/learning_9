@@ -17,18 +17,21 @@ export class AuthService {
   async validateUser(email: string, password: string,) {
     const user = await this.usersService.findByEmail(email);
 
+    if (!user) {
+      throw new UnauthorizedException('Email bạn nhập không đúng');
+    }
+
     const isPasswordValid = await isComparePasswordHelper(
       password,
-      user?.password || '',
+      user.password,
     );
-
-    // Kiểm tra user trước
-    if (!user) {
-      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
-    }
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Tài khoản chưa được xác thực');
     }
 
     return user;
